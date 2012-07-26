@@ -97,7 +97,7 @@ var vml = {
       if ( t && t[1] ) { o.translate_x = parseFloat( t[1] ); }
       if ( t && t[2] ) { o.translate_y = parseFloat( t[2] ); }
       //put fix into regex to handle negative rotations
-      var r = /rotate\((\-?\d+\.\d+|\-?\d+)\)/.exec( attr.transform );
+ 	  var r = /rotate\((\-?\d+\.\d+|\-?\d+)\)/.exec( attr.transform );
       if ( r ) { o.rotation = parseFloat( r[1] ) % 360; }
       // var scale_x = 1, scale_y = 1,
       // var s = /scale\((\d+)(?:,(\d+))?\)/i.exec( value );
@@ -178,19 +178,19 @@ var vml = {
             var rotation = 0;
             //do a bit of normalization here, i.e. negative rotation seems problematic
             if (d.rotation >=0 && d.rotation <= 360) {
-               rotation = d.rotation;
+                rotation = d.rotation;
             } else if (d.rotation < 0 && d.rotation >= -360) {
-               rotation = 360 + d.rotation;
+                rotation = 360 + d.rotation;
             } else if (d.rotation > 360) {
-               rotation = d.rotation % 360;
+                rotation = d.rotation % 360;
             } else if (d.rotation < -360) {
-               rotation = 360 - d.rotation % 360 
+                rotation = 360 - d.rotation % 360;
             }
             var val = rotation * (Math.PI * 2 / 360);
             var sine = Math.sin(val);
             var cosine = Math.cos(val);
 
-            //put the styles in place           
+            //put the styles in place
             es['-ms-filter'] = "progid:DXImageTransform.Microsoft.Matrix(M11="+cosine+", M12="+(-sine)+", M21="+sine+", M22="+cosine+",sizingMethod='auto expand')";
             es.filter= "progid:DXImageTransform.Microsoft.Matrix(M11="+cosine+", M12="+(-sine)+", M21="+sine+", M22="+cosine+",sizingMethod='auto expand')";
         }
@@ -323,6 +323,7 @@ var vml = {
       stroke.color = vml.color( attr.stroke ) || 'black';
       stroke.opacity = parseFloat( attr['stroke-opacity'] || '1' ) || '1';
       stroke.joinstyle = vml.joins[ attr['stroke-linejoin'] ] || 'miter';
+      stroke.dashstyle = attr['stroke-dasharray'] || '';
     }
   },
 

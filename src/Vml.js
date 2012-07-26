@@ -277,6 +277,7 @@ var vml = {
       stroke.color = vml.color( attr.stroke ) || 'black';
       stroke.opacity = parseFloat( attr['stroke-opacity'] || '1' ) || '1';
       stroke.joinstyle = vml.joins[ attr['stroke-linejoin'] ] || 'miter';
+      stroke.dashstyle = attr['stroke-dasharray'] || '';
     }
   },
 
