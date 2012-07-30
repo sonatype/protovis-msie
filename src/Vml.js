@@ -50,8 +50,7 @@ var vml = {
       var t = /translate\((\d+(?:\.\d+)?)(?:,(\d+(?:\.\d+)?))?\)/.exec( attr.transform );
       if ( t && t[1] ) { o.translate_x = parseFloat( t[1] ); }
       if ( t && t[2] ) { o.translate_y = parseFloat( t[2] ); }
-      //put fix into regex to handle negative rotations
- 	  var r = /rotate\((\-?\d+\.\d+|\-?\d+)\)/.exec( attr.transform );
+      var r = /rotate\((-?\d+\.\d+|-?\d+)\)/.exec( attr.transform );
       if ( r ) { o.rotation = parseFloat( r[1] ) % 360; }
       // var scale_x = 1, scale_y = 1,
       // var s = /scale\((\d+)(?:,(\d+))?\)/i.exec( value );
@@ -153,6 +152,19 @@ var vml = {
         vml.path( elm, attr.d );
         vml.fill( elm, attr );
         vml.stroke( elm, attr );
+        if ( d.rotation ) {
+          var r = (~~d.rotation % 360) * vml.d2r,
+              ct = Math.cos(r),
+              st = Math.sin(r);
+          vml.skew( elm, [
+            ct.toFixed( 8 ), -st.toFixed( 8 ),
+            st.toFixed( 8 ),  ct.toFixed( 8 ),
+            0, 0
+          ].join(','));
+        }
+        else {
+          vml.skew( elm, "" );
+        }
       },
       css: "top:0px;left:0px;width:1000px;height:1000px"
     },
@@ -202,6 +214,8 @@ var vml = {
     },
 
     // this allows reuse of the createElement function for actual VML
+    "vml:textpath": { rewrite: 'textpath' },
+    "vml:skew": { rewrite: 'skew' },
     "vml:path": { rewrite: 'path' },
     "vml:stroke": { rewrite: 'stroke' },
     "vml:fill": { rewrite: 'fill' }
@@ -292,13 +306,27 @@ var vml = {
     return p;
   },
 
+  skew: function ( elm, matrix ) {
+    var p = elm.getElementsByTagName( 'skew' )[0];
+    if ( !p ) {
+      p = elm.appendChild( vml.createElement( 'vml:skew' ) );
+      p.origin = "-0.5 -0.5";
+      p.on = true;
+    }
+    if ( arguments.length > 1 ) {
+      p.setAttribute('matrix', matrix);
+    }
+    return p;
+  },
+
+
 
   init: function () {
     if ( !vml.text_shim ) {
       vml.text_shim = document.getElementById('pv_vml_text_shim') || document.createElement('span');
       vml.text_shim.id = 'protovisvml_text_shim';
       vml.text_shim.style.cssText = "position:absolute;left:-9999em;top:-9999em;padding:0;margin:0;line-height:1;display:inline-block;white-space:nowrap;";
-      document.body.appendChild( vml.text_shim );
+      document.body.insertBefore( vml.text_shim, document.body.firstChild );
     }
     if ( !vml.styles ) {
       vml.styles = document.getElementById('protovisvml_styles') || document.createElement("style");
@@ -339,10 +367,11 @@ var vml = {
     var bits = p.match( /([MLHVCSQTAZ][^MLHVCSQTAZ]*)/gi );
     var np = [], lastcurve = [];
     for ( var i=0,bl=bits.length; i<bl; i++ ) {
-      var itm  = bits[i],
-          op   = itm.charAt( 0 ),
-          args = itm.substring( 1 ).split( /[, ]/ );
-
+      var itm  = bits[i]
+        , op   = itm.charAt( 0 )
+        , args = itm.substring( 1 ).split( /[, ]/ )
+        , argi = 0
+        ;
       switch ( op ) {
 
         case 'M':  // moveto (absolute)
@@ -372,16 +401,18 @@ var vml = {
           break;
 
         case "L": // lineTo (absolute)
-          op = 'l';
-          //support for multiple sets of coordinates
-          for ( var i = 0 ; i < args.length ; i++ ) {
-              args[i] = round(args[i]);
+          op = '';
+          while ( argi < args.length ) {
+            np.push( 'l', (x = round( args[argi++] )) + ',' +
+                          (y = round( args[argi++] )) );
           }
           break;
         case "l": // lineTo (relative)
-          op = 'l';
-          args = [ (x = x + round( args[0] )),
-                   (y = y + round( args[1] )) ];
+          op = '';
+          while ( argi < args.length ) {
+            np.push( 'l', (x = x + round( args[argi++] )) + ',' +
+                          (y = y + round( args[argi++] )) );
+          }
           break;
 
         case "H": // horizontal lineto (absolute)
@@ -481,7 +512,9 @@ var vml = {
           op = '';
           args = [];
       }
-      np.push( op, args.join(',') );
+      if ( op ) {
+        np.push( op, args.join(',') );
+      }
     }
     return ( vml._pathcache[p] = (np.join('') + 'e') );
   }
