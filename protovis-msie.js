@@ -172,27 +172,6 @@ var vml = {
             es = elm.style;
         es.left = (d.translate_x + d.x) + "px";
         es.top = (d.translate_y + d.y) + "px";
-        //handle rotation using simple css styles
-        if ( d.rotation ) {
-            var rotation = 0;
-            //do a bit of normalization here, i.e. negative rotation seems problematic
-            if (d.rotation >=0 && d.rotation <= 360) {
-                rotation = d.rotation;
-            } else if (d.rotation < 0 && d.rotation >= -360) {
-                rotation = 360 + d.rotation;
-            } else if (d.rotation > 360) {
-                rotation = d.rotation % 360;
-            } else if (d.rotation < -360) {
-                rotation = 360 - d.rotation % 360;
-            }
-            var val = rotation * (Math.PI * 2 / 360);
-            var sine = Math.sin(val);
-            var cosine = Math.cos(val);
-
-            //put the styles in place
-            es['-ms-filter'] = "progid:DXImageTransform.Microsoft.Matrix(M11="+cosine+", M12="+(-sine)+", M21="+sine+", M22="+cosine+",sizingMethod='auto expand')";
-            es.filter= "progid:DXImageTransform.Microsoft.Matrix(M11="+cosine+", M12="+(-sine)+", M21="+sine+", M22="+cosine+",sizingMethod='auto expand')";
-        }
         elm.coordorigin = "0,0";
         elm.coordsize = "21600,21600";
         vml.path( elm, attr.d );
