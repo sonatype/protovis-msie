@@ -253,6 +253,8 @@ var vml = {
     'div': document.createElement( 'div' )
   },
 
+  _elementZIndex : 1,
+
   createElement: function ( type, reformat ) {
     var elm,
         cache = vml._elmcache,
@@ -269,6 +271,13 @@ var vml = {
       elm = cache[ tagName ].cloneNode( false );
     }
     helper.css && (elm.style.cssText = helper.css);
+	if (tagName in vml.block) {
+		 if(elm.style.cssText) {
+			elm.style.cssText += ';z-index:' + vml._elementZIndex++;
+		} else {
+			elm.style.cssText = 'z-index:' + vml._elementZIndex++;
+		}
+	}
     return elm;
   },
 
@@ -1007,7 +1016,7 @@ pv.VmlScene.label = function(scenes) {
         "d": "M" + dx1 + "," + dy + " L" + dx2 + "," + dy + " Z",
         "fill": fill.color,
         "fill-rule": "evenodd",
-        "fill-opacity": fill.opacity || null,
+        "fill-opacity": fill.opacity || null
       });
 
       // bind text to path
